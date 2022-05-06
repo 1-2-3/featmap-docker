@@ -1,0 +1,28 @@
+version: "2.1"
+services:
+  postgres:
+    image: postgres:11-alpine
+    restart: always
+    volumes:
+      - ${PWD}/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${FEATMAP_DB}
+      POSTGRES_USER: ${FEATMAP_DB_USER}
+      POSTGRES_PASSWORD: ${FEATMAP_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FEATMAP_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+  featmap:
+    image: zahuifan/featmap_v2 
+    restart: always
+    ports:
+      - ${FEATMAP_HTTP_PORT}:${FEATMAP_HTTP_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ${PWD}/conf.json:/opt/featmap/conf.json
